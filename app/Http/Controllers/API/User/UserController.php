@@ -37,7 +37,8 @@ class UserController extends Controller
                 'status'=> 'active',
                 'createAt' => Carbon::now()->toDateTimeString()  
             ];
-            Log::info("User Register",$dataUser);
+
+            Log::info("User Register",$dataUser,$memory_usage,$execution_time);
             DB::table('user')->insert($dataUser);
 
             // jangan lupa dibuatkan log nya
