@@ -66,17 +66,32 @@ class UserController extends Controller
                 'email' => 'required|exists:user,email',
                 'password' => 'required',
             ]);
-            $dataLogin = [
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
-            ];
-            Log::info("User login",$dataLogin);
-            $response = [
-                'success' => true,
-                'data' => $dataLogin,
-                'message' => 'Berhasil Login'
-            ];
-            return response()->json($response, 200);
+
+            $user = User::firstwhere('email',$request -> email);
+
+            if($user && Hash::check($request -> password, $user -> password)){
+                $dataLogin = [
+                    'email' => $user->email,
+                    'password' => $user->password,
+                ];
+                $response = [
+                    'success' => true,
+                    'data' => $dataLogin,
+                    'message' => 'Berhasil Login'
+                ];
+                return response()->json($response, 200);
+            }else{
+                $response = [
+                    'success' => false,
+                    'data' => [],
+                    'message' => 'Password Salah'
+                ];
+                return response()->json($response, 404);
+            }
+            // $dataLogin = [
+            //     'email' => $request->input('email'),
+            //     'password' => $request->input('password'),
+            // ];
         }catch (\Exception  $e) {
             $response = [
                 'success' => false,
