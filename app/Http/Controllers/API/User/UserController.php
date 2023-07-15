@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\User\User;
 
 class UserController extends Controller
 {
@@ -32,12 +33,11 @@ class UserController extends Controller
                 'email' => $request->input('email'),
                 'password' => Hash::make($request->input('password')),
                 'isActive'=> 1,
-                'otp'=> 123456,
+                'otp'=> rand(0,9) . rand(0,9) . rand(0,9) . rand(0,9) . rand(0,9) . rand(0,9),
                 'status'=> 'active',
                 'createAt' => Carbon::now()->toDateTimeString()  
             ];
-
-            Log::info("User Register",$dataUser,$memory_usage,$execution_time);
+            Log::info("User Register",$dataUser);
             DB::table('user')->insert($dataUser);
 
             // jangan lupa dibuatkan log nya
@@ -62,7 +62,7 @@ class UserController extends Controller
     public function login(Request $request){
         try{
             $request->validate([
-                'email' => 'required',
+                'email' => 'required|exists:user,email',
                 'password' => 'required',
             ]);
             $dataLogin = [
@@ -74,6 +74,34 @@ class UserController extends Controller
                 'success' => true,
                 'data' => $dataLogin,
                 'message' => 'Berhasil Login'
+            ];
+            return response()->json($response, 200);
+        }catch (\Exception  $e) {
+            $response = [
+                'success' => false,
+                'data' => $e,
+                'message' => $e->getMessage()
+            ];
+
+            return response()->json($response, 404);
+        }
+    }
+
+    public function otp(Request $request){
+        try{
+            $request->validate([
+                'email' => 'required',
+            ]);
+            $user = User::firstwhere('email',$request -> email);
+            
+            $userOtp = [
+                'email' => $user->email,
+                'otp' => $user->otp,
+            ];
+            $response = [
+                'success' => true,
+                'data' => $userOtp,
+                'message' => 'OTP berhasil dikirim ke email anda'
             ];
             return response()->json($response, 200);
         }catch (\Exception  $e) {
