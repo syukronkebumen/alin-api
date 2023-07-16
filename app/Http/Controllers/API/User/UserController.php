@@ -88,10 +88,6 @@ class UserController extends Controller
                 ];
                 return response()->json($response, 404);
             }
-            // $dataLogin = [
-            //     'email' => $request->input('email'),
-            //     'password' => $request->input('password'),
-            // ];
         }catch (\Exception  $e) {
             $response = [
                 'success' => false,
