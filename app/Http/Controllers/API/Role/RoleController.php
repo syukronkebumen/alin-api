@@ -1,41 +1,29 @@
 <?php
 
-namespace App\Http\Controllers\API\User;
-
+namespace App\Http\Controllers\API\Role;
 use App\Http\CoHntrollers\Controller;
 
-class UserController extends Controller
+class RoleController extends Controller
 {
-    public function register()
+    public function getallrole()
     {
-        try {
-            //code disini
-
-
-
-
-
-
-
-
-
-
-            // jangan lupa dibuatkan log nya
-            $data = [];
+        try{
+            $role =  DB::select('select * from role');
             $response = [
                 'success' => true,
-                'data' => $data,
-                'message' => 'Berhasil Register'
+                'data' => $role,
+                'message' => 'Berhasil menampilkan semua role'
             ];
 
             return response()->json($response, 200);
-        } catch (\Exception  $e) {
+
+        }catch (\Exception  $e) {
             $response = [
                 'success' => false,
                 'data' => $e,
                 'message' => $e->getMessage()
             ];
-
+            
             return response()->json($response, 404);
         }
     }
