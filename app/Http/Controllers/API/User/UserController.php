@@ -163,4 +163,43 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
+    public function sendOtp(Request $request){
+        try{
+            $request->validate([
+                'email' => 'required|email'
+            ]);
+            $user = User::firstwhere('email', $request->input('email'));
+            if($user){
+                $data = [
+                    'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
+                ];
+                $user->otp = $data['otp'];
+                $user->save();
+                $dataNew = [
+                    'email' => $user->email,
+                    'otp'=> $data['otp'],
+                    // 'updateAt' => Carbon::now()->toDateTimeString(),
+                ];
+
+                $response = [
+                    'success' => true,
+                    'data' => $dataNew,
+                    'message' => 'OTP berhasil dikirim ke email anda'
+                ];
+                return response()->json($response, 200);
+            }else{
+                $response = [
+                    'success' => false,
+                    'message' => 'Email tidak terdaftar'
+                ];
+                return response()->json($response, 404);
+            }
+        }catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
 }

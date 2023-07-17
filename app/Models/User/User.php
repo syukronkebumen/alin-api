@@ -11,10 +11,12 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
     public $table = "user";
+    public $primaryKey = "userCode";
     protected $fillable = [
         'name',
         'email',
         'password',
+        'otp',
     ];
 
     protected $hidden = [
@@ -26,4 +28,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    public function getUpdatedAtColumn()
+    {
+        return 'updateAt';
+    }
 }
