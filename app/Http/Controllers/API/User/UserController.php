@@ -27,18 +27,18 @@ class UserController extends Controller
             //     'email' => $request->input('email'),
             //     'password' => Hash::make($request->input('password')),
             // ]);
-            
+
             $dataUser = [
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
                 'password' => Hash::make($request->input('password')),
-                'isActive'=> 1,
-                'otp'=> rand(0,9) . rand(0,9) . rand(0,9) . rand(0,9) . rand(0,9) . rand(0,9),
-                'status'=> 'active',
-                'createAt' => Carbon::now()->toDateTimeString()  
+                'isActive' => 1,
+                'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
+                'status' => 'active',
+                'createAt' => Carbon::now()->toDateTimeString()
             ];
 
-            Log::info("User Register",$dataUser);
+            Log::info("User Register", $dataUser);
             DB::table('user')->insert($dataUser);
 
             // jangan lupa dibuatkan log nya
@@ -49,7 +49,6 @@ class UserController extends Controller
             ];
 
             return response()->json($response, 200);
-
         } catch (\Exception  $e) {
             $response = [
                 'success' => false,
@@ -60,16 +59,17 @@ class UserController extends Controller
             return response()->json($response, 404);
         }
     }
-    public function login(Request $request){
-        try{
+    public function login(Request $request)
+    {
+        try {
             $request->validate([
                 'email' => 'required|exists:user,email',
                 'password' => 'required',
             ]);
 
-            $user = User::firstwhere('email',$request -> email);
+            $user = User::firstwhere('email', $request->email);
 
-            if($user && Hash::check($request -> password, $user -> password)){
+            if ($user && Hash::check($request->password, $user->password)) {
                 $dataLogin = [
                     'email' => $user->email,
                     'password' => $user->password,
@@ -80,7 +80,7 @@ class UserController extends Controller
                     'message' => 'Berhasil Login'
                 ];
                 return response()->json($response, 200);
-            }else{
+            } else {
                 $response = [
                     'success' => false,
                     'data' => [],
@@ -88,7 +88,7 @@ class UserController extends Controller
                 ];
                 return response()->json($response, 404);
             }
-        }catch (\Exception  $e) {
+        } catch (\Exception  $e) {
             $response = [
                 'success' => false,
                 'data' => $e,
@@ -99,13 +99,14 @@ class UserController extends Controller
         }
     }
 
-    public function otp(Request $request){
-        try{
+    public function otp(Request $request)
+    {
+        try {
             $request->validate([
                 'email' => 'required',
             ]);
-            $user = User::firstwhere('email',$request -> email);
-            
+            $user = User::firstwhere('email', $request->email);
+
             $userOtp = [
                 'email' => $user->email,
                 'otp' => $user->otp,
@@ -116,7 +117,7 @@ class UserController extends Controller
                 'message' => 'OTP berhasil dikirim ke email anda'
             ];
             return response()->json($response, 200);
-        }catch (\Exception  $e) {
+        } catch (\Exception  $e) {
             $response = [
                 'success' => false,
                 'data' => $e,
@@ -124,6 +125,42 @@ class UserController extends Controller
             ];
 
             return response()->json($response, 404);
+        }
+    }
+    public function checkOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'otp' => 'required',
+                'email' => 'required|email'
+            ]);
+
+            $user = User::where('email', $request->input('email'))->first();
+
+            if ($user && $user->otp === $request->input('otp')) {
+                $data = [
+                    'email' => $user->email,
+                    'otp' => $user->otp,
+                ];
+                $response = [
+                    'success' => true,
+                    'data' => $data,
+                    'message' => 'OTP is correct'
+                ];
+                return response()->json($response, 200);
+            } else {
+                $response = [
+                    'success' => false,
+                    'message' => 'Invalid OTP'
+                ];
+                return response()->json($response, 400);
+            }
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
         }
     }
 }

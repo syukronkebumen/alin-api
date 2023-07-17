@@ -25,6 +25,7 @@ Route::group([
     Route::post('/register', [UserController::class, 'register']);
     Route::post('/login', [UserController::class, 'login']);
     Route::post('/otp', [UserController::class, 'otp']);
+    Route::post('/checkotp', [UserController::class, 'checkOtp']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {
