@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\User\User;
+use Laravel\Passport\Passport;
 
 class UserController extends Controller
 {
@@ -70,9 +71,11 @@ class UserController extends Controller
             $user = User::firstwhere('email', $request->email);
 
             if ($user && Hash::check($request->password, $user->password)) {
+                $token = Passport::createToken('token')->accessToken;
                 $dataLogin = [
                     'email' => $user->email,
                     'password' => $user->password,
+                    'token' => $token
                 ];
                 $response = [
                     'success' => true,
