@@ -77,7 +77,7 @@ class UserController extends Controller
                 $response = [
                     'success' => true,
                     'data' => $dataLogin,
-                    'message' => 'Berhasil Login'
+                    'message' => 'Berhasil Login',
                 ];
                 return response()->json($response, 200);
             } else {
@@ -163,13 +163,14 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
-    public function sendOtp(Request $request){
-        try{
+    public function sendOtp(Request $request)
+    {
+        try {
             $request->validate([
                 'email' => 'required|email'
             ]);
             $user = User::firstwhere('email', $request->input('email'));
-            if($user){
+            if ($user) {
                 $data = [
                     'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
                 ];
@@ -177,8 +178,7 @@ class UserController extends Controller
                 $user->save();
                 $dataNew = [
                     'email' => $user->email,
-                    'otp'=> $data['otp'],
-                    // 'updateAt' => Carbon::now()->toDateTimeString(),
+                    'otp' => $data['otp'],
                 ];
 
                 $response = [
@@ -187,14 +187,14 @@ class UserController extends Controller
                     'message' => 'OTP berhasil dikirim ke email anda'
                 ];
                 return response()->json($response, 200);
-            }else{
+            } else {
                 $response = [
                     'success' => false,
                     'message' => 'Email tidak terdaftar'
                 ];
                 return response()->json($response, 404);
             }
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             $response = [
                 'success' => false,
                 'message' => $e->getMessage()

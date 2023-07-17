@@ -32,4 +32,10 @@ class User extends Authenticatable
     {
         return 'updateAt';
     }
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        // Convert the date to UNIX Epoch time or UTC format
+        return $date->format('U'); // For UNIX Epoch time
+        // return $date->toIso8601String(); // For UTC format
+    }
 }
