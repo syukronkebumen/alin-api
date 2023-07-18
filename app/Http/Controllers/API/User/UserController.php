@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\User\User;
+use App\Models\User\Permission;
 use Laravel\Passport\Passport;
 
 class UserController extends Controller

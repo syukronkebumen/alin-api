@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\User\UserController;
+use App\Http\Controllers\API\User\PermissionController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -39,6 +40,18 @@ Route::group([
 ], function () {
     Route::get('/all', [UserController::class, 'getAlluser']);
     Route::post('/{userCode}/one', [UserController::class, 'getOneuser']);
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+
+Route::group([
+    'prefix' => 'v2/permission',
+], function () {
+    Route::get('/all', [PermissionController::class, 'getAllpermission']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {
