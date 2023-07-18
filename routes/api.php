@@ -20,13 +20,23 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // start
 Route::group([
-    'prefix' => 'v2/user',
+    'prefix' => 'v2/auth',
 ], function () {
     Route::post('/register', [UserController::class, 'register']);
     Route::post('/login', [UserController::class, 'login']);
     Route::post('/otp', [UserController::class, 'otp']);
     Route::post('/checkotp', [UserController::class, 'checkOtp']);
     Route::post('/sendotp', [UserController::class, 'sendOtp']);
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+Route::group([
+    'prefix' => 'v2/user',
+], function () {
     Route::get('/all', [UserController::class, 'getAlluser']);
     Route::post('/{userCode}/one', [UserController::class, 'getOneuser']);
     Route::group([
