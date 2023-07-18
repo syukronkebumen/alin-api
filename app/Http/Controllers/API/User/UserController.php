@@ -36,7 +36,7 @@ class UserController extends Controller
                 'isActive' => 1,
                 'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
                 'status' => 'active',
-                'createAt' => Carbon::now()->toDateTimeString()
+                'createAt' => Carbon::now()->round(microtime(true) * 1000)
             ];
 
             Log::info("User Register", $dataUser);
@@ -71,11 +71,9 @@ class UserController extends Controller
             $user = User::firstwhere('email', $request->email);
 
             if ($user && Hash::check($request->password, $user->password)) {
-                $token = Passport::createToken('token')->accessToken;
                 $dataLogin = [
                     'email' => $user->email,
                     'password' => $user->password,
-                    'token' => $token
                 ];
                 $response = [
                     'success' => true,
@@ -182,6 +180,7 @@ class UserController extends Controller
                 $dataNew = [
                     'email' => $user->email,
                     'otp' => $data['otp'],
+                    'updateAt'=> Carbon::now()->round(microtime(true) * 1000)
                 ];
 
                 $response = [
