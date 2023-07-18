@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User\User;
 use App\Models\User\Permission;
 use App\Models\User\userPermission;
+use App\Models\User\Role;
+use App\Models\User\RoleUser;
 use Laravel\Passport\Passport;
 
 class UserController extends Controller
@@ -276,13 +278,13 @@ class UserController extends Controller
                     'permission' => [
                         'permissionCode' => $permission->permissionCode,
                         'permission' => $permission->permission,
-                        'description' => $permission->description, 
+                        'description' => $permission->description,
                         'createAt' => Carbon::now()->round(microtime(true) * 1000)
                     ],
                 ],
                 'error' => [],
             ];
-    
+
             return response()->json($response, 200);
         } catch (\Exception $e) {
             $response = [
@@ -292,8 +294,9 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
-    public function deletePermission($userCode,Request $request){
-        try{
+    public function deletePermission($userCode, Request $request)
+    {
+        try {
             $request->validate([
                 'permissionCode' => 'required',
             ]);
@@ -324,7 +327,45 @@ class UserController extends Controller
                 'error' => [],
             ];
             return response()->json($response, 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+    public function addRole($userCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'roleCode' => 'required',
+            ]);
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $role = Role::find($request->input('roleCode'));
+            if (!$user || !$role) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User or Role not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+            $response = [
+                'status' => 200,
+                'message' => 'Role Berhasil Ditambahkan',
+                'data' => [
+                    'usercode' => $user->userCode,
+                    'role' => [
+                        'roleCode' => $role->roleCode,
+                        'role' => $role->role,
+                        'agencyCode' => $role->agencyCode,
+                        'createAt' => Carbon::now()->round(microtime(true) * 1000)
+                    ]
+                ]
+            ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
             $response = [
                 'success' => false,
                 'message' => $e->getMessage()

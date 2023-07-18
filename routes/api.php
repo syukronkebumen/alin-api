@@ -42,6 +42,7 @@ Route::group([
     Route::post('/{userCode}/one', [UserController::class, 'getOneuser']);
     Route::post('/{userCode}/addPermission/{permissionCode}', [UserController::class, 'addPermission']);
     Route::post('/{userCode}/delPermission/{permissionCode}', [UserController::class, 'deletePermission']);
+    Route::post('/{userCode}/addRole', [UserController::class, 'addRole']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {
