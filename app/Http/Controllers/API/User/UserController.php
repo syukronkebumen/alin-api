@@ -223,4 +223,29 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
+    public function getOneUser($userCode, Request $request)
+    {
+        try {
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $response = [
+                'success' => true,
+                'data' => $user,
+                'message' => 'User Found'
+            ];
+            return response()->json($response, 200);
+            if ($user == null) {
+                $response = [
+                    'success' => false,
+                    'message' => 'User Not Found'
+                ];
+                return response()->json($response, 404);
+            }
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
 }
