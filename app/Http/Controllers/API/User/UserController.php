@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\User\User;
 use App\Models\User\Permission;
+use App\Models\User\userPermission;
 use Laravel\Passport\Passport;
 
 class UserController extends Controller
@@ -227,9 +228,11 @@ class UserController extends Controller
     {
         try {
             $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $user_permission = userPermission::where('userCode', $userCode)->where('deleteAt', null)->get();
             $response = [
                 'success' => true,
                 'data' => $user,
+                'permission' => $user_permission,
                 'message' => 'User Found'
             ];
             return response()->json($response, 200);
@@ -282,6 +285,46 @@ class UserController extends Controller
     
             return response()->json($response, 200);
         } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+    public function deletePermission($userCode,Request $request){
+        try{
+            $request->validate([
+                'permissionCode' => 'required',
+            ]);
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $permission = Permission::find($request->input('permissionCode'));
+            $upCode = userPermission::where('userCode', $userCode)->where('deleteAt', null)->first('upCode');
+            if (!$user || !$permission) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User or Permission not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+            $response = [
+                'status' => 200,
+                'message' => 'Permission Berhasil Dihapus',
+                'data' => [
+                    'usercode' => $user->userCode,
+                    'upCode' => $upCode,
+                    'permission' => [
+                        'permissionCode' => $permission->permissionCode,
+                        'permission' => $permission->permission,
+                        'description' => $permission->description,
+                        'createAt' => Carbon::now()->round(microtime(true) * 1000)
+                    ],
+                ],
+                'error' => [],
+            ];
+            return response()->json($response, 200);
+        }catch(\Exception $e){
             $response = [
                 'success' => false,
                 'message' => $e->getMessage()
