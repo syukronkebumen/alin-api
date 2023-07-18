@@ -35,7 +35,9 @@ class RoleController extends Controller
     public function getonerole($roleCode, Request $request)
     {
         try{
-            $role = Role::firstWhere('roleCode', $roleCode);
+            $role = Role::where('roleCode', $roleCode)
+            ->where('deleteAt',NULL)
+            ->first();
             // $role = Role::firstWhere('role', $request->role);
             if($role==NULL){
                 return response()->json(['message' => 'Role Tidak Ada'], 404);
