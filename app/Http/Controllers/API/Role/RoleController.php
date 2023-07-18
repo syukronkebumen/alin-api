@@ -32,7 +32,7 @@ class RoleController extends Controller
         }
     }
 
-    public function getonerole($roleCode, Request $request)
+    public function getonerole($roleCode)
     {
         try{
             $role = Role::where('roleCode', $roleCode)
@@ -46,7 +46,6 @@ class RoleController extends Controller
                 'success' => true,
                 'data' => $role,
                 'message' => 'Berhasil menampilkan satu role',
-                'log' => $request->role
             ];
 
             return response()->json($response, 200);

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\Permission\PermissionController;
 use App\Http\Controllers\API\RolePermission\RolePermissionController;
+use App\Http\Controllers\API\Subscription\SubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,7 +40,7 @@ Route::group([
     'prefix' => 'v2/role',
 ], function () {
     Route::get('/all', [RoleController::class, 'getallrole']);
-    Route::post('/{roleCode}/one', [RoleController::class, 'getonerole']);
+    Route::get('/{roleCode}/one', [RoleController::class, 'getonerole']);
     Route::post('/{roleCode}/delete', [RoleController::class, 'deleterole']);
     Route::post('/add', [RoleController::class, 'createrole']);
     Route::post('/{roleCode}/update', [RoleController::class, 'updaterole']);
@@ -71,6 +72,21 @@ Route::group([
     'prefix' => 'v2/rolepermission',
 ], function () {
     Route::post('/{roleCode}/{permissionCode}/delete', [RolePermissionController::class, 'deleterp']);
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+
+Route::group([
+    'prefix' => 'v2/subscription',
+], function () {
+    Route::get('/{subscriptionCode}/one', [SubscriptionController::class, 'getonesub']);
+    Route::post('/add', [SubscriptionController::class, 'addsub']);
+    Route::post('/{subscriptionCode}/update', [SubscriptionController::class, 'updatesub']);
+    Route::post('/{subscriptionCode}/delete', [SubscriptionController::class, 'deletesub']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {
