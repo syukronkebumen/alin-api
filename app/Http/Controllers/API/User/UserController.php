@@ -205,4 +205,22 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
+    public function getAlluser()
+    {
+        try {
+            $user = User::whereNull('deleteAt')->get();
+            $response = [
+                'success' => true,
+                'data' => $user,
+                'message' => 'OTP is correct'
+            ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
 }
