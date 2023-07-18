@@ -3,10 +3,11 @@
 namespace App\Models\User;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 
-class Permission extends Authenticatable
+class Permission extends Model
 {
+    use HasFactory;
     use HasFactory;
     public $table = "permission";
     public $primaryKey = "permissionCode";
