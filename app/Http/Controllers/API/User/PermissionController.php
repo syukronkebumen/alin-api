@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\API\User;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User\Permission;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Models\User\User;
 
 class PermissionController extends Controller
 {
+
+    // ...
+
     public function getAllpermission()
     {
         try {
@@ -18,7 +23,7 @@ class PermissionController extends Controller
                 'data' => $permissions,
                 'error' => [],
             ];
-            if($permissions == null) {
+            if ($permissions == null) {
                 $response = [
                     'status' => 404,
                     'message' => 'Data not found',
@@ -34,6 +39,6 @@ class PermissionController extends Controller
                 'data' => null,
                 'error' => [$e->getMessage()],
             ], 500);
-        }   
+        }
     }
 }

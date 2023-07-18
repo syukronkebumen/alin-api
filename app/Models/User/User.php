@@ -40,8 +40,4 @@ class User extends Authenticatable
         return $date->format('U'); // For UNIX Epoch time
         // return $date->toIso8601String(); // For UTC format
     }
-    public function permission()
-    {
-        return $this->belongsToMany(Permission::class, 'user_permission', 'userCode', 'upCode');
-    }
 }

@@ -252,10 +252,10 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                'upCode' => 'required',
+                'permissionCode' => 'required',
             ]);
             $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
-            $permission = Permission::find($request->input('upCode'));
+            $permission = Permission::find($request->input('permissionCode'));
 
             if (!$user || !$permission) {
                 return response()->json([
@@ -265,19 +265,16 @@ class UserController extends Controller
                     'error' => [],
                 ], 404);
             }
-            $user->permission()->attach($permission);
-            $attachedPermission = $user->permission()->where('id', $permission->id)->first();
             $response = [
                 'status' => 200,
                 'message' => 'Permission Berhasil Ditambahkan',
                 'data' => [
-                    'usercode' => $user->id,
-                    'upCode' => $attachedPermission->id,
+                    'usercode' => $user->userCode,
                     'permission' => [
-                        'permissionCode' => $attachedPermission->permissionCode,
-                        'permission' => $attachedPermission->permission,
-                        'description' => $attachedPermission->description,
-                        'createAt' => $attachedPermission->created_at,
+                        'permissionCode' => $permission->permissionCode,
+                        'permission' => $permission->permission,
+                        'description' => $permission->description, 
+                        'createAt' => Carbon::now()->round(microtime(true) * 1000)
                     ],
                 ],
                 'error' => [],
