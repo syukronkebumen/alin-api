@@ -181,7 +181,7 @@ class UserController extends Controller
                 $dataNew = [
                     'email' => $user->email,
                     'otp' => $data['otp'],
-                    'updateAt'=> Carbon::now()->round(microtime(true) * 1000)
+                    'updateAt' => Carbon::now()->round(microtime(true) * 1000)
                 ];
 
                 $response = [
@@ -240,6 +240,50 @@ class UserController extends Controller
                 ];
                 return response()->json($response, 404);
             }
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+    public function addPermission($userCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'upCode' => 'required',
+            ]);
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $permission = Permission::find($request->input('upCode'));
+
+            if (!$user || !$permission) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User or Permission not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+            $user->permission()->attach($permission);
+            $attachedPermission = $user->permission()->where('id', $permission->id)->first();
+            $response = [
+                'status' => 200,
+                'message' => 'Permission Berhasil Ditambahkan',
+                'data' => [
+                    'usercode' => $user->id,
+                    'upCode' => $attachedPermission->id,
+                    'permission' => [
+                        'permissionCode' => $attachedPermission->permissionCode,
+                        'permission' => $attachedPermission->permission,
+                        'description' => $attachedPermission->description,
+                        'createAt' => $attachedPermission->created_at,
+                    ],
+                ],
+                'error' => [],
+            ];
+    
+            return response()->json($response, 200);
         } catch (\Exception $e) {
             $response = [
                 'success' => false,
