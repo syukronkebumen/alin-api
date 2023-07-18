@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Models\Role;
+namespace App\Models\RolePermission;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class RolePermission extends Model
 {
     use HasFactory;
-    public $table = ('role');
-    protected $primaryKey = 'roleCode';
+    public $table = ('role_permission');
+    protected $primaryKey = 'rpCode';
     protected $fillable = [
-        'role',
-        'agencyCode',
-        'status',
+        'permissionCode',
+        'roleCode',
         'deleteAt',
     ];
     const UPDATED_AT = 'updateAt';

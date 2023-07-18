@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\Role\RoleController;
+use App\Http\Controllers\API\Permission\PermissionController;
+use App\Http\Controllers\API\RolePermission\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +27,50 @@ Route::group([
 ], function () {
     // Route::post('login', 'API\User\UserController@login');
     // Code disini
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+
+Route::group([
+    'prefix' => 'v2/role',
+], function () {
+    Route::get('/all', [RoleController::class, 'getallrole']);
+    Route::post('/{roleCode}/one', [RoleController::class, 'getonerole']);
+    Route::post('/{roleCode}/delete', [RoleController::class, 'deleterole']);
+    Route::post('/add', [RoleController::class, 'createrole']);
+    Route::post('/{roleCode}/update', [RoleController::class, 'updaterole']);
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+
+Route::group([
+    'prefix' => 'v2/permission',
+], function () {
+    // Route::get('/all', [RoleController::class, 'getallrole']);
+    // Route::post('/{roleCode}/one', [RoleController::class, 'getonerole']);
+    Route::post('/{permissionCode}/delete', [PermissionController::class, 'deletepermission']);
+    // Route::post('/add', [RoleController::class, 'createrole']);
+    // Route::post('/{roleCode}/update', [RoleController::class, 'updaterole']);
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+
+Route::group([
+    'prefix' => 'v2/rolepermission',
+], function () {
+    Route::post('/{roleCode}/{permissionCode}/delete', [RolePermissionController::class, 'deleterp']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {
