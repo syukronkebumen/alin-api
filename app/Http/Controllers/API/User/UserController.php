@@ -13,6 +13,8 @@ use App\Models\User\Permission;
 use App\Models\User\userPermission;
 use App\Models\User\Role;
 use App\Models\User\RoleUser;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\Passport;
 
 class UserController extends Controller
@@ -20,33 +22,30 @@ class UserController extends Controller
     public function register(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required',
-                'email' => 'required|email|unique:user,email',
+                'email' => 'required|email',
                 'password' => 'required|string|min:6',
             ]);
 
-
-            // $user = DB::table("user")create([
-            //     'name' => $request->input('name'),
-            //     'email' => $request->input('email'),
-            //     'password' => Hash::make($request->input('password')),
-            // ]);
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error.', $validator->errors());
+            }
 
             $dataUser = [
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
+                'password' => bcrypt($request->input('password')),
                 'isActive' => 1,
                 'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
                 'status' => 'active',
-                'createAt' => Carbon::now()->round(microtime(true) * 1000)
+                'createAt' => Carbon::now()->round(microtime(true) * 1000),
             ];
 
             Log::info("User Register", $dataUser);
-            DB::table('user')->insert($dataUser);
+            $user = User::create($dataUser);
+            $dataUser['token'] = $user->createToken('tokenLogin')->accessToken->token;
 
-            // jangan lupa dibuatkan log nya
             $response = [
                 'success' => true,
                 'data' => $dataUser,
@@ -67,18 +66,26 @@ class UserController extends Controller
     public function login(Request $request)
     {
         try {
-            $request->validate([
-                'email' => 'required|exists:user,email',
+
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
                 'password' => 'required',
             ]);
 
-            $user = User::firstwhere('email', $request->email);
-
-            if ($user && Hash::check($request->password, $user->password)) {
-                $dataLogin = [
-                    'email' => $user->email,
-                    'password' => $user->password,
+            if ($validator->fails()) {
+                $response = [
+                    'success' => false,
+                    'data' => [],
+                    'message' => $validator->errors(),
                 ];
+                return response()->json($response, 404);
+            }
+
+            $user = User::firstwhere('email', $request->email);
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $userAuth = Auth::user();
+                $dataLogin['email'] = $userAuth->email;
+                $dataLogin['token'] =  $userAuth->createToken('tokenLogin')->accessToken->token;
                 $response = [
                     'success' => true,
                     'data' => $dataLogin,

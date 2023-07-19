@@ -18,7 +18,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'isActive',
         'otp',
+        'status',
+        'agencyCode',
+        'createAt'
     ];
 
     protected $hidden = [
@@ -40,4 +44,6 @@ class User extends Authenticatable
         return $date->format('U'); // For UNIX Epoch time
         // return $date->toIso8601String(); // For UTC format
     }
+
+    public $timestamps = false;
 }
