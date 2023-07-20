@@ -99,7 +99,7 @@ class UserController extends Controller
                     $response = [
                         'success' => false,
                         'data' => [],
-                        'message' => 'Password Salah'
+                        'message' => 'Akun tidak ditemukan'
                     ];
                     return response()->json($response, 404);
                 }
@@ -119,7 +119,7 @@ class UserController extends Controller
                     $response = [
                         'success' => false,
                         'data' => [],
-                        'message' => 'Password Salah'
+                        'message' => 'Akun tidak ditemukan'
                     ];
                     return response()->json($response, 404);
                 }
