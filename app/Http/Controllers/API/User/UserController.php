@@ -68,8 +68,8 @@ class UserController extends Controller
     public function login(Request $request)
     {
         try {
+            $startTime = microtime(true);
             $cacheLogin = Redis::get('user_login');
-
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'password' => 'required',
@@ -90,6 +90,11 @@ class UserController extends Controller
                     $userAuth = Auth::user();
                     $dataLogin['email'] = $userAuth->email;
                     $dataLogin['token'] =  $login->token;
+
+                    $endTime = microtime(true);
+                    $executionTime = $endTime - $startTime;
+                    $dataLogin['time'] = round($executionTime, 1);
+                    Log::info("User Login", $dataLogin);
                     return response()->json([
                         'success' => true,
                         'data' => $dataLogin,
@@ -109,11 +114,17 @@ class UserController extends Controller
                     $dataLogin['email'] = $userAuth->email;
                     $dataLogin['token'] =  $userAuth->createToken('tokenLogin')->accessToken->token;
                     Redis::set('user_login', json_encode($dataLogin));
+
+                    $endTime = microtime(true);
+                    $executionTime = $endTime - $startTime;
+                    $dataLogin['time'] = round($executionTime, 1);
+                    Log::info("User Login", $dataLogin);
                     $response = [
                         'success' => true,
                         'data' => $dataLogin,
                         'message' => 'Berhasil Login',
                     ];
+
                     return response()->json($response, 200);
                 } else {
                     $response = [
