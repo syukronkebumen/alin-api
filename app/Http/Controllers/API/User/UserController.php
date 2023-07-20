@@ -14,6 +14,8 @@ use App\Models\User\userPermission;
 use App\Models\User\Role;
 use App\Models\User\RoleUser;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Passport\Passport;
 
@@ -66,6 +68,9 @@ class UserController extends Controller
     public function login(Request $request)
     {
         try {
+            $cacheLogin = Redis::get('user_login');
+            // Redis::del('user_login');
+            // dd($cacheLogin);
 
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
@@ -81,24 +86,45 @@ class UserController extends Controller
                 return response()->json($response, 404);
             }
 
-            $user = User::firstwhere('email', $request->email);
-            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-                $userAuth = Auth::user();
-                $dataLogin['email'] = $userAuth->email;
-                $dataLogin['token'] =  $userAuth->createToken('tokenLogin')->accessToken->token;
-                $response = [
-                    'success' => true,
-                    'data' => $dataLogin,
-                    'message' => 'Berhasil Login',
-                ];
-                return response()->json($response, 200);
+            if (isset($cacheLogin)) {
+                $login = json_decode($cacheLogin, FALSE);
+                if (Auth::attempt(['email' => $login->email, 'password' => $request->password])) {
+                    $userAuth = Auth::user();
+                    $dataLogin['email'] = $userAuth->email;
+                    $dataLogin['token'] =  $login->token;
+                    return response()->json([
+                        'success' => true,
+                        'data' => $dataLogin,
+                        'message' => 'Fetched from redis'
+                    ]);
+                } else {
+                    $response = [
+                        'success' => false,
+                        'data' => [],
+                        'message' => 'Password Salah'
+                    ];
+                    return response()->json($response, 404);
+                }
             } else {
-                $response = [
-                    'success' => false,
-                    'data' => [],
-                    'message' => 'Password Salah'
-                ];
-                return response()->json($response, 404);
+                if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                    $userAuth = Auth::user();
+                    $dataLogin['email'] = $userAuth->email;
+                    $dataLogin['token'] =  $userAuth->createToken('tokenLogin')->accessToken->token;
+                    Redis::set('user_login', json_encode($dataLogin));
+                    $response = [
+                        'success' => true,
+                        'data' => $dataLogin,
+                        'message' => 'Berhasil Login',
+                    ];
+                    return response()->json($response, 200);
+                } else {
+                    $response = [
+                        'success' => false,
+                        'data' => [],
+                        'message' => 'Password Salah'
+                    ];
+                    return response()->json($response, 404);
+                }
             }
         } catch (\Exception  $e) {
             $response = [
