@@ -69,8 +69,6 @@ class UserController extends Controller
     {
         try {
             $cacheLogin = Redis::get('user_login');
-            // Redis::del('user_login');
-            // dd($cacheLogin);
 
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
