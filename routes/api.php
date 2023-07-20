@@ -50,6 +50,7 @@ Route::group([
     Route::post('/{userCode}/delRole', [UserController::class, 'deleteRole']);
     Route::post('/{userCode}/create', [UserController::class, 'createUser']);
     Route::post('/update/{userCode}', [UserController::class, 'editUser']);
+    Route::post('/delete/{userCode}', [UserController::class, 'deleteUser']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {

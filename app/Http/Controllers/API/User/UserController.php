@@ -494,4 +494,37 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
+
+    public function deleteUser($userCode)
+    {
+        try {
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+
+            $userDelete = $user->update(['deleteAt' => Carbon::now()->round(microtime(true) * 1000)]);
+
+            $response = [
+                'status' => 200,
+                'message' => 'User has been Deleted Successfully',
+                'data' => $user,
+                'updateAt' => $userDelete
+            ];
+
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
 }
