@@ -380,4 +380,43 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
+    public function deleteRole($userCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'roleCode' => 'required',
+            ]);
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $role = Role::find($request->input('roleCode'));
+            if (!$user || !$role) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User or Role not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+            $roleUpdate = $role->update(['deleteAt' => Carbon::now()->round(microtime(true) * 1000)]);
+            $response = [
+                'status' => 200,
+                'message' => 'Role Berhasil Dihapus',
+                'data' => [
+                    'usercode' => $user->userCode,
+                    'role' => [
+                        'roleCode' => $role->roleCode,
+                        'role' => $role->role,
+                        'agencyCode' => $role->agencyCode,
+                        'deleteAt' => $roleUpdate
+                    ]
+                ]
+            ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
 }

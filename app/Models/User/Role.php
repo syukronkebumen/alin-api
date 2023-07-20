@@ -11,6 +11,10 @@ class Role extends Model
     public $table = "role";
     public $primaryKey = "roleCode";
     protected $fillable = [
-        'roleCode', 'role','agencyCode',
+        'roleCode', 'role','agencyCode','deleteAt'
     ];
+    public function getUpdatedAtColumn()
+    {
+        return 'updateAt';
+    }
 }
