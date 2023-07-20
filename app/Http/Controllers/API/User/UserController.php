@@ -419,4 +419,79 @@ class UserController extends Controller
             return response()->json($response, 500);
         }
     }
+    public function createUser($agencyCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
+            ]);
+            $user = User::create([
+                'name' => $request->input('name'),
+                'password' => Hash::make($request->input('password')),
+                'email' => $request->input('email'),
+                'agencyCode' => $agencyCode,
+                'isActive' => 1,
+                'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
+                'status' => 'active',
+                'createAt' => Carbon::now()->round(microtime(true) * 1000)
+            ]);
+            $response = [
+                'status' => 200,
+                'message' => 'User has been Created Successfully',
+                'data' => $user,
+            ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+
+    public function editUser($userCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
+            ]);
+
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+
+            // Update the user data
+            $user->update([
+                'name' => $request->input('name'),
+                'password' => Hash::make($request->input('password')),
+                'email' => $request->input('email'),
+            ]);
+
+            $response = [
+                'status' => 200,
+                'message' => 'User has been Updated Successfully',
+                'data' => $user,
+            ];
+
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
 }
