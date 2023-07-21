@@ -13,6 +13,7 @@ use App\Models\User\Permission;
 use App\Models\User\userPermission;
 use App\Models\User\Role;
 use App\Utils\AlinLogger;
+use Illuminate\Support\Str;
 use App\Models\User\RoleUser;
 // use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,6 @@ class UserController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required',
                 'email' => 'required|email',
                 'password' => 'required|string|min:6',
             ]);
@@ -35,30 +35,29 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return $this->sendError('Validation Error.', $validator->errors());
             }
+            $name = Str::random(10);
             $logger = new AlinLogger();
             $logger->runLogDB();
             $dataUser = [
-                'name' => $request->input('name'),
+                'name' => $name,
                 'email' => $request->input('email'),
                 'password' => bcrypt($request->input('password')),
                 'isActive' => 1,
                 'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
-                'status' => 'active',
+                'status' => 'private',
                 'createAt' => Carbon::now()->round(microtime(true) * 1000),
             ];
 
             $logger->stopLogDB();
             Log::info("User Register", $dataUser);
             $user = User::create($dataUser);
-            $logger->writeLogDB('LOG DB', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             $dataUser['token'] = $user->createToken('tokenLogin')->accessToken->token;
-
             $response = [
                 'success' => true,
                 'data' => $dataUser,
                 'message' => 'Berhasil Register'
             ];
-
+            $logger->writeLogDB('LOG DB', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             return response()->json($response, 200);
         } catch (\Exception  $e) {
             $response = [
