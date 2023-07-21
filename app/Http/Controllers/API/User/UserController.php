@@ -12,9 +12,13 @@ use App\Models\User\User;
 use App\Models\User\Permission;
 use App\Models\User\userPermission;
 use App\Models\User\Role;
+use App\Utils\AlinLogger;
 use App\Models\User\RoleUser;
+// use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Laravel\Passport\Passport;
 
 class UserController extends Controller
@@ -31,7 +35,8 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return $this->sendError('Validation Error.', $validator->errors());
             }
-
+            $logger = new AlinLogger();
+            $logger->runLogDB();
             $dataUser = [
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
@@ -42,7 +47,9 @@ class UserController extends Controller
                 'createAt' => Carbon::now()->round(microtime(true) * 1000),
             ];
 
+            $logger->stopLogDB();
             Log::info("User Register", $dataUser);
+            $logger->writeLogDB('my_log', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             $user = User::create($dataUser);
             $dataUser['token'] = $user->createToken('tokenLogin')->accessToken->token;
 
