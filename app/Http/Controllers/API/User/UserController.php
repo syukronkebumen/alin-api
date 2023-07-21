@@ -49,8 +49,8 @@ class UserController extends Controller
 
             $logger->stopLogDB();
             Log::info("User Register", $dataUser);
-            $logger->writeLogDB('LOG DB', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             $user = User::create($dataUser);
+            $logger->writeLogDB('LOG DB', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             $dataUser['token'] = $user->createToken('tokenLogin')->accessToken->token;
 
             $response = [
