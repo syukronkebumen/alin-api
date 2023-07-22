@@ -2,6 +2,8 @@
 
 namespace App\Models\User;
 
+use App\Models\Agency\Agency;
+use App\Models\Subscription\Subscription;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -46,4 +48,19 @@ class User extends Authenticatable
     }
 
     public $timestamps = false;
+
+    public function getUser($email)
+    {
+        $getUser = User::select(
+            'userCode',
+            'email',
+            'password',
+            'isActive',
+            'status',
+            'agencyCode'
+        )->where('email', $email)
+            ->first();
+
+        return $getUser;
+    }
 }

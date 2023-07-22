@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\API\User;
 
+use App\Http\Controllers\API\BaseController;
 use App\Http\Controllers\Controller;
+use App\Models\Agency\Agency;
+use App\Models\Permission\Permission as PermissionPermission;
+use App\Models\Subscription\Subscription;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\User\User;
-use App\Models\User\Permission;
+use App\Models\Permission\Permission;
 use App\Models\User\userPermission;
 use App\Models\User\Role;
 use App\Models\User\RoleUser;
@@ -69,7 +73,6 @@ class UserController extends Controller
     {
         try {
             $startTime = microtime(true);
-            $cacheLogin = Redis::get('user_login');
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'password' => 'required',
@@ -84,65 +87,113 @@ class UserController extends Controller
                 return response()->json($response, 404);
             }
 
-            if (isset($cacheLogin)) {
-                $login = json_decode($cacheLogin, FALSE);
-                if (Auth::attempt(['email' => $login->email, 'password' => $request->password])) {
-                    $userAuth = Auth::user();
-                    $dataLogin['email'] = $userAuth->email;
-                    $dataLogin['token'] =  $login->token;
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $userAuth = Auth::user();
+                $dataLogin['email'] = $userAuth->email;
+                $dataLogin['token'] =  $userAuth->createToken('tokenLogin')->accessToken->token;
 
-                    $endTime = microtime(true);
-                    $executionTime = $endTime - $startTime;
-                    $dataLogin['time'] = round($executionTime, 1);
-                    Log::info("User Login", $dataLogin);
-                    return response()->json([
-                        'success' => true,
-                        'data' => $dataLogin,
-                        'message' => 'Fetched from redis'
-                    ]);
-                } else {
-                    $response = [
-                        'success' => false,
-                        'data' => [],
-                        'message' => 'Akun tidak ditemukan'
-                    ];
-                    return response()->json($response, 404);
+                //select user
+                $user = new User();
+                $selectUser = $user->getUser($userAuth->email);
+
+                $agency = [];
+                $app    = [];
+                if ($selectUser->agencyCode) {
+                    $newAgency = new Agency();
+                    $agency = $newAgency->getAgency($selectUser->agencyCode);
+
+                    $newSubscription = new Subscription();
+                    $selectSubscription = $newSubscription->getSubscription($selectUser->agencyCode);
+
+                    $tempApp = [];
+                    foreach ($selectSubscription as $key => $val) {
+                        $temp = $val;
+                        $val->setting = json_decode($val->setting, TRUE);
+                        $tempApp[] = $temp;
+                    }
+                    $app = $tempApp;
                 }
-            } else {
-                if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-                    $userAuth = Auth::user();
-                    $dataLogin['email'] = $userAuth->email;
-                    $dataLogin['token'] =  $userAuth->createToken('tokenLogin')->accessToken->token;
-                    Redis::set('user_login', json_encode($dataLogin));
+
+                $newPermission = new Permission();
+                $selectPermission = $newPermission->getPermission($selectUser->userCode);
+                $specialPermission = $newPermission->getSpecialPermission($selectUser->userCode);
+
+                $token = $dataLogin['token'];
+                $dataToken = [
+                    "userCode" => $selectUser->userCode,
+                    "email" => $selectUser->email,
+                    "isActive" => $selectUser->isActive,
+                    "status" => $selectUser->status,
+                    "agency" => $agency,
+                    "app" => $app,
+                    "permission" => $selectPermission,
+                    "specialPermission" => $specialPermission,
+                    "S3" => [
+                        "S3_VERSION" => env('S3_VERSION'),
+                        "S3_REGION" => env('S3_REGION'),
+                        "AWS_ACCESS_KEY" => env('AWS_ACCESS_KEY'),
+                        "AWS_SECRET_ACCESS_KEY" => env('AWS_SECRET_ACCESS_KEY'),
+                        "S3_ENDPOINT" => env('S3_ENDPOINT'),
+                        "S3_BUCKET" => env("S3_BUCKET")
+                    ]
+                ];
+
+                $dataToken['token'] = $token;
+                Redis::set('user_login', json_encode($dataToken));
+                $getData = Redis::get('user_login');
+                if ($getData) {
+                    $dataFromRedis = json_decode($getData);
+                    $newDataFromRedis = $dataFromRedis;
 
                     $endTime = microtime(true);
                     $executionTime = $endTime - $startTime;
-                    $dataLogin['time'] = round($executionTime, 1);
-                    Log::info("User Login", $dataLogin);
+                    $timeRequest = round($executionTime, 1);
+                    Log::info("User Login", ['timeRequest' => $timeRequest]);
+
                     $response = [
-                        'success' => true,
-                        'data' => $dataLogin,
+                        'status' => 200,
                         'message' => 'Berhasil Login',
+                        'data' => [
+                            'token' => $token,
+                            'dataToken' => $newDataFromRedis
+                        ],
+                        'error' => []
                     ];
 
                     return response()->json($response, 200);
                 } else {
                     $response = [
-                        'success' => false,
+                        'status' => 400,
+                        'message' => 'Token Expired',
                         'data' => [],
-                        'message' => 'Akun tidak ditemukan'
+                        'error' => []
                     ];
-                    return response()->json($response, 404);
+
+                    return response()->json($response, 400);
                 }
+                // $endTime = microtime(true);
+                // $executionTime = $endTime - $startTime;
+                // $dataLogin['time'] = round($executionTime, 1);
+                // Log::info("User Login", $dataLogin);
+            } else {
+                $response = [
+                    'status' => 400,
+                    'message' => 'Akun tidak ditemukan',
+                    'data' => [],
+                    'error' => []
+                ];
+
+                return response()->json($response, 400);
             }
         } catch (\Exception  $e) {
             $response = [
-                'success' => false,
+                'status' => 400,
+                'message' => $e->getMessage(),
                 'data' => $e,
-                'message' => $e->getMessage()
+                'error' => []
             ];
 
-            return response()->json($response, 404);
+            return response()->json($response, 400);
         }
     }
 

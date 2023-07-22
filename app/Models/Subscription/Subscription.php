@@ -22,4 +22,21 @@ class Subscription extends Model
     ];
     const UPDATED_AT = 'updateAt';
 
+    public function getSubscription($agencyCode)
+    {
+        $getSubscription = Subscription::select(
+            'subscriptionCode',
+            'agencyCode',
+            'startDate',
+            'endDate',
+            'status',
+            'appCode',
+            'price',
+            'setting'
+        )->where('agencyCode', $agencyCode)
+            ->whereNull('deleteAt')
+            ->get();
+
+        return $getSubscription;
+    }
 }
