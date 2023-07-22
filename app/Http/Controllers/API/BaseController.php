@@ -9,7 +9,6 @@ class BaseController extends Controller
 {
     public function sendError($error, $errorMessages = [], $code = 404)
     {
-        dd('siniii');
         $response = [
             'success' => false,
             'message' => $error,
@@ -20,5 +19,12 @@ class BaseController extends Controller
         }
 
         return response()->json($response, $code);
+    }
+
+    public function logTimeExecution($startTime, $endTime)
+    {
+        $executionTime = $endTime - $startTime;
+
+        return round($executionTime, 1);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\API\User\PermissionController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\RolePermission\RolePermissionController;
 use App\Http\Controllers\API\Subscription\SubscriptionController;
+use App\Http\Controllers\API\User\RefreshController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,9 +33,11 @@ Route::group([
     Route::post('/otp', [UserController::class, 'otp']);
     Route::post('/checkotp', [UserController::class, 'checkOtp']);
     Route::post('/sendotp', [UserController::class, 'sendOtp']);
+    Route::get('/authenticate', [UserController::class, 'authenticate'])->name('unauthorized');
     Route::group([
-        'middleware' => 'auth:api',
+        'middleware' => 'header',
     ], function () {
+        Route::get('/refresh', [RefreshController::class, 'index']);
         // Route::post('checkin', 'API\User\UserController@checkin');
         // Code disini
     });

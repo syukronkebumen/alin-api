@@ -27,6 +27,8 @@ use Illuminate\Support\Facades\Validator;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Laravel\Passport\Passport;
+use Mail;
+use App\Mail\SendMail;
 
 class UserController extends Controller
 {
@@ -48,7 +50,7 @@ class UserController extends Controller
                 'name' => $name,
                 'email' => $request->input('email'),
                 'password' => bcrypt($request->input('password')),
-                'isActive' => 1,
+                'isActive' => '0',
                 'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
                 'status' => 'private',
                 'createAt' => Carbon::now()->round(microtime(true) * 1000),
@@ -59,20 +61,28 @@ class UserController extends Controller
             $user = User::create($dataUser);
             $dataUser['token'] = $user->createToken('tokenLogin')->accessToken->token;
             $response = [
-                'success' => true,
-                'data' => $dataUser,
-                'message' => 'Berhasil Register'
+                "status" => 200,
+                "message" => 'Berhasil Register',
+                "data" => $dataUser,
+                "error" => []
             ];
+
+            $content = [
+                'title' => 'OTP From Newus Technology',
+                'body' =>  $dataUser['otp']
+            ];
+            Mail::to($dataUser['email'])->send(new SendMail($content));
             $logger->writeLogDB('LOG DB', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             return response()->json($response, 200);
         } catch (\Exception  $e) {
             $response = [
-                'success' => false,
-                'data' => $e,
-                'message' => $e->getMessage()
+                "status" => 400,
+                "message" => $e->getMessage(),
+                "data" => [],
+                "error" => []
             ];
 
-            return response()->json($response, 404);
+            return response()->json($response, 400);
         }
     }
     public function login(Request $request)
@@ -145,8 +155,8 @@ class UserController extends Controller
                 ];
 
                 $dataToken['token'] = $token;
-                Redis::set('user_login', json_encode($dataToken));
-                $getData = Redis::get('user_login');
+                Redis::set($token, json_encode($dataToken));
+                $getData = Redis::get($token);
                 if ($getData) {
                     $dataFromRedis = json_decode($getData);
                     $newDataFromRedis = $dataFromRedis;
@@ -247,24 +257,29 @@ class UserController extends Controller
                     'otp' => $user->otp,
                 ];
                 $response = [
-                    'success' => true,
-                    'data' => $data,
-                    'message' => 'OTP is correct'
+                    "status" => 200,
+                    "message" => 'OTP is correct',
+                    "data" => $data,
+                    "error" => []
                 ];
                 return response()->json($response, 200);
             } else {
                 $response = [
-                    'success' => false,
-                    'message' => 'Invalid OTP'
+                    "status" => 400,
+                    "message" => 'Invalid OTP',
+                    "data" => [],
+                    "error" => []
                 ];
                 return response()->json($response, 400);
             }
         } catch (\Exception $e) {
             $response = [
-                'success' => false,
-                'message' => $e->getMessage()
+                "status" => 400,
+                "message" => $e->getMessage(),
+                "data" => [],
+                "error" => []
             ];
-            return response()->json($response, 500);
+            return response()->json($response, 400);
         }
     }
     public function sendOtp(Request $request)
@@ -286,25 +301,35 @@ class UserController extends Controller
                     'updateAt' => Carbon::now()->round(microtime(true) * 1000)
                 ];
 
+                $content = [
+                    'title' => 'OTP From Newus Technology',
+                    'body' =>  $dataNew['otp']
+                ];
+                Mail::to($dataNew['email'])->send(new SendMail($content));
                 $response = [
-                    'success' => true,
-                    'data' => $dataNew,
-                    'message' => 'OTP berhasil dikirim ke email anda'
+                    "status" => 200,
+                    "message" => 'OTP berhasil dikirim ke email anda',
+                    "data" => $dataNew,
+                    "error" => []
                 ];
                 return response()->json($response, 200);
             } else {
                 $response = [
-                    'success' => false,
-                    'message' => 'Email tidak terdaftar'
+                    "status" => 400,
+                    "message" => 'Email tidak terdaftar',
+                    "data" => [],
+                    "error" => []
                 ];
-                return response()->json($response, 404);
+                return response()->json($response, 400);
             }
         } catch (\Exception $e) {
             $response = [
-                'success' => false,
-                'message' => $e->getMessage()
+                "status" => 400,
+                "message" => $e->getMessage(),
+                "data" => [],
+                "error" => []
             ];
-            return response()->json($response, 500);
+            return response()->json($response, 400);
         }
     }
     public function getAlluser()
@@ -618,5 +643,17 @@ class UserController extends Controller
             ];
             return response()->json($response, 500);
         }
+    }
+
+    public function authenticate()
+    {
+        $response = [
+            'status' => 401,
+            'message' => '401 Unauthorized',
+            'data' => [],
+            'error' => ''
+        ];
+
+        return response()->json($response, 401);
     }
 }
