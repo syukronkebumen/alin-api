@@ -24,7 +24,8 @@ class User extends Authenticatable
         'otp',
         'status',
         'agencyCode',
-        'createAt'
+        'createAt',
+        'deleteAt'
     ];
 
     protected $hidden = [

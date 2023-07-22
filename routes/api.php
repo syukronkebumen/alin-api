@@ -47,6 +47,10 @@ Route::group([
     Route::post('/{userCode}/addPermission/{permissionCode}', [UserController::class, 'addPermission']);
     Route::post('/{userCode}/delPermission/{permissionCode}', [UserController::class, 'deletePermission']);
     Route::post('/{userCode}/addRole', [UserController::class, 'addRole']);
+    Route::post('/{userCode}/delRole', [UserController::class, 'deleteRole']);
+    Route::post('/{userCode}/create', [UserController::class, 'createUser']);
+    Route::post('/update/{userCode}', [UserController::class, 'editUser']);
+    Route::post('/delete/{userCode}', [UserController::class, 'deleteUser']);
     Route::group([
         'middleware' => 'auth:api',
     ], function () {

@@ -16,11 +16,16 @@ use App\Models\User\User;
 use App\Models\Permission\Permission;
 use App\Models\User\userPermission;
 use App\Models\User\Role;
+use App\Utils\AlinLogger;
+use Illuminate\Support\Str;
 use App\Models\User\RoleUser;
+// use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Laravel\Passport\Passport;
 
 class UserController extends Controller
@@ -29,7 +34,6 @@ class UserController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required',
                 'email' => 'required|email',
                 'password' => 'required|string|min:6',
             ]);
@@ -37,27 +41,29 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return $this->sendError('Validation Error.', $validator->errors());
             }
-
+            $name = Str::random(10);
+            $logger = new AlinLogger();
+            $logger->runLogDB();
             $dataUser = [
-                'name' => $request->input('name'),
+                'name' => $name,
                 'email' => $request->input('email'),
                 'password' => bcrypt($request->input('password')),
                 'isActive' => 1,
                 'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
-                'status' => 'active',
+                'status' => 'private',
                 'createAt' => Carbon::now()->round(microtime(true) * 1000),
             ];
 
+            $logger->stopLogDB();
             Log::info("User Register", $dataUser);
             $user = User::create($dataUser);
             $dataUser['token'] = $user->createToken('tokenLogin')->accessToken->token;
-
             $response = [
                 'success' => true,
                 'data' => $dataUser,
                 'message' => 'Berhasil Register'
             ];
-
+            $logger->writeLogDB('LOG DB', storage_path('logs/database.log'), ['additional_info' => 'data'], Logger::INFO);
             return response()->json($response, 200);
         } catch (\Exception  $e) {
             $response = [
@@ -457,6 +463,153 @@ class UserController extends Controller
                     ]
                 ]
             ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+    public function deleteRole($userCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'roleCode' => 'required',
+            ]);
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+            $role = Role::find($request->input('roleCode'));
+            if (!$user || !$role) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User or Role not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+            $roleUpdate = $role->update(['deleteAt' => Carbon::now()->round(microtime(true) * 1000)]);
+            $response = [
+                'status' => 200,
+                'message' => 'Role Berhasil Dihapus',
+                'data' => [
+                    'usercode' => $user->userCode,
+                    'role' => [
+                        'roleCode' => $role->roleCode,
+                        'role' => $role->role,
+                        'agencyCode' => $role->agencyCode,
+                        'deleteAt' => $roleUpdate
+                    ]
+                ]
+            ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+    public function createUser($agencyCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
+            ]);
+            $user = User::create([
+                'name' => $request->input('name'),
+                'password' => Hash::make($request->input('password')),
+                'email' => $request->input('email'),
+                'agencyCode' => $agencyCode,
+                'isActive' => 1,
+                'otp' => rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9),
+                'status' => 'active',
+                'createAt' => Carbon::now()->round(microtime(true) * 1000)
+            ]);
+            $response = [
+                'status' => 200,
+                'message' => 'User has been Created Successfully',
+                'data' => $user,
+            ];
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+
+    public function editUser($userCode, Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required',
+                'password' => 'required',
+            ]);
+
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+
+            // Update the user data
+            $user->update([
+                'name' => $request->input('name'),
+                'password' => Hash::make($request->input('password')),
+                'email' => $request->input('email'),
+            ]);
+
+            $response = [
+                'status' => 200,
+                'message' => 'User has been Updated Successfully',
+                'data' => $user,
+            ];
+
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+            return response()->json($response, 500);
+        }
+    }
+
+    public function deleteUser($userCode)
+    {
+        try {
+            $user = User::where('userCode', $userCode)->where('deleteAt', null)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User not found',
+                    'data' => null,
+                    'error' => [],
+                ], 404);
+            }
+
+            $userDelete = $user->update(['deleteAt' => Carbon::now()->round(microtime(true) * 1000)]);
+
+            $response = [
+                'status' => 200,
+                'message' => 'User has been Deleted Successfully',
+                'data' => $user,
+                'updateAt' => $userDelete
+            ];
+
             return response()->json($response, 200);
         } catch (\Exception $e) {
             $response = [
