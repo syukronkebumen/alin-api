@@ -8,4 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Agency extends Model
 {
     use HasFactory;
+    public $table = ('agency');
+    protected $primaryKey = 'agencyCode';
+    protected $fillable = [
+        'name',
+        'email',
+        'noHp',
+        'address',
+        'logo',
+        'domain',
+        'deleteAt',
+    ];
+    const UPDATED_AT = 'updateAt';
+
 }

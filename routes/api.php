@@ -7,6 +7,7 @@ use App\Http\Controllers\API\User\PermissionController;
 use App\Http\Controllers\API\Role\RoleController;
 use App\Http\Controllers\API\RolePermission\RolePermissionController;
 use App\Http\Controllers\API\Subscription\SubscriptionController;
+use App\Http\Controllers\API\Agency\AgencyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -126,3 +127,19 @@ Route::group([
         // Code disini
     });
 });
+
+Route::group([
+    'prefix' => 'v2/agency',
+], function () {
+    Route::post('/add', [AgencyController::class, 'addagency']);
+    Route::get('/{agencyCode}/one', [AgencyController::class, 'getoneagency']);
+    Route::post('/{agencyCode}/update', [AgencyController::class, 'updateagency']);
+    Route::post('/{agencyCode}/delete', [AgencyController::class, 'deleteagency']);
+    Route::group([
+        'middleware' => 'auth:api',
+    ], function () {
+        // Route::post('checkin', 'API\User\UserController@checkin');
+        // Code disini
+    });
+});
+

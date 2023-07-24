@@ -25,6 +25,7 @@ class SubscriptionController extends Controller
             ];
 
             return response()->json($response, 200);
+            
         }catch (\Exception  $e){
             $response = [
                 'success' => false,
