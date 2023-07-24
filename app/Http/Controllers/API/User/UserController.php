@@ -29,6 +29,7 @@ use Monolog\Logger;
 use Laravel\Passport\Passport;
 use Mail;
 use App\Mail\SendMail;
+use Illuminate\Support\Facades\Mail as FacadesMail;
 
 class UserController extends Controller
 {
@@ -36,6 +37,7 @@ class UserController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'name' => 'required',
                 'email' => 'required|email',
                 'password' => 'required|string|min:6',
             ]);
@@ -43,11 +45,10 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return $this->sendError('Validation Error.', $validator->errors());
             }
-            $name = Str::random(10);
             $logger = new AlinLogger();
             $logger->runLogDB();
             $dataUser = [
-                'name' => $name,
+                'name' => $request->input('name'),
                 'email' => $request->input('email'),
                 'password' => bcrypt($request->input('password')),
                 'isActive' => '0',
